@@ -1,0 +1,47 @@
+http:
+  routers:
+    http-catchall:
+      rule: "HostRegexp(`^.+$`)"
+      entryPoints:
+        - web
+      middlewares:
+        - redirect-to-https
+      service: noop@internal
+
+    traefik:
+      rule: "Host(`traefik.homelab.msaquib.com`)"
+      entryPoints:
+        - websecure
+      tls:
+        certResolver: cloudflare
+      service: api@internal
+
+    cockpit:
+      rule: "Host(`cockpit.homelab.msaquib.com`)"
+      entryPoints:
+        - websecure
+      tls:
+        certResolver: cloudflare
+      service: cockpit
+
+  services:
+    cockpit:
+      loadBalancer:
+        servers:
+          - url: "https://host.docker.internal:9090"
+        serversTransport: cockpitTransport
+
+  serversTransports:
+    cockpitTransport:
+      insecureSkipVerify: true
+
+  middlewares:
+    redirect-to-https:
+      redirectScheme:
+        scheme: https
+        permanent: true
+
+# tls:
+#   certificates:
+#     - certFile: /certs/homelab.crt
+#       keyFile: /certs/homelab.key

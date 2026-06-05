@@ -1,0 +1,88 @@
+{
+    "version": "1.0",
+    "homelab": {
+        "name": "🏠 Saquib's Homelab",
+        "subtitle": "Private infrastructure powered by Docker, Traefik, CoreDNS and Tailscale"
+    },
+    "stats": {
+        "server": 1,
+        "private": "100%"
+    },
+    "sections": [
+        {
+            "id": "management",
+            "title": "Management",
+            "services": [
+                {
+                    "name": "Traefik",
+                    "description": "Reverse proxy and ingress management",
+                    "url": "https://traefik.homelab.msaquib.com",
+                    "icon": "./assets/traefik-logo.svg",
+                    "status": "active",
+                    "network": "management_net",
+                    "monitoring": true
+                },
+                {
+                    "name": "Portainer",
+                    "description": "Container management and deployments",
+                    "url": "https://portainer.homelab.msaquib.com",
+                    "icon": "./assets/portainer-logo.svg",
+                    "status": "active",
+                    "network": "management_net",
+                    "monitoring": true
+                },
+                {
+                    "name": "Cockpit",
+                    "description": "Server administration and monitoring",
+                    "url": "https://cockpit.homelab.msaquib.com",
+                    "icon": "./assets/cockpit-logo.svg",
+                    "status": "active",
+                    "network": "host",
+                    "monitoring": true
+                },
+                {
+                    "name": "File Browser",
+                    "description": "Web-based file management",
+                    "url": "https://files.homelab.msaquib.com",
+                    "icon": "./assets/filebrowser-logo.svg",
+                    "status": "active",
+                    "network": "management_net",
+                    "monitoring": true
+                }
+            ]
+        },
+        {
+            "id": "monitoring",
+            "title": "Monitoring",
+            "services": [
+                {
+                    "name": "Uptime Kuma",
+                    "description": "Infrastructure monitoring and alerting",
+                    "url": "https://uptime.homelab.msaquib.com",
+                    "icon": "./assets/kuma-logo.svg",
+                    "status": "active",
+                    "network": "management_net",
+                    "monitoring": false
+                }
+            ]
+        },
+        {
+            "id": "future",
+            "title": "Future Services",
+            "services": [
+                {
+                    "name": "Authentik",
+                    "description": "Single Sign-On and identity provider",
+                    "icon": "./assets/authentik-logo.svg",
+                    "status": "planned"
+                },
+                {
+                    "name": "Grafana",
+                    "description": "Metrics and dashboards",
+                    "icon": "./assets/grafana-logo.svg",
+                    "status": "planned"
+                }
+            ]
+        }
+    ]
+}

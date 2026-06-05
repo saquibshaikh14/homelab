@@ -1,0 +1,304 @@
+# Homelab Context
+
+For AI agent understanding of the project, current progress, architecture decisions, operational workflows, and active roadmap.
+
+---
+
+# Overview
+
+Personal self-hosted homelab built around:
+
+* Tailscale
+* CoreDNS
+* Traefik
+* Docker
+
+Primary goal is to provide secure, private access to self-hosted services with trusted HTTPS, centralized routing, internal DNS resolution, and infrastructure monitoring.
+
+---
+
+# Request Flow
+
+Administrative Services (current):
+
+```text
+User
+ ↓
+Tailscale
+ ↓
+CoreDNS
+ ↓
+Traefik
+ ↓
+Service
+```
+
+All services are private and only accessible through the Tailscale mesh network.
+
+---
+
+# Infrastructure Status
+
+Phase 1: Infrastructure & Operations
+
+```text
+✅ Complete
+```
+
+Phase 2: Identity & Automation
+
+```text
+⏳ Planned
+```
+
+---
+
+# Folder Structure
+
+```text
+/home/saquib/homelab/
+├── apps/                   # Reserved for future applications
+├── backups/                # Reserved for backups
+├── databases/              # Reserved for database persistence
+├── management/
+│   ├── dns/
+│   │   ├── Corefile
+│   │   └── compose.yml
+│   ├── filebrowser/
+│   │   ├── compose.yml
+│   │   ├── config/
+│   │   └── data/
+│   ├── homepage/
+│   │   ├── compose.yml
+│   │   ├── config/
+│   │   └── site/
+│   └── portainer/
+│       ├── compose.yml
+│       └── data/
+├── monitoring/
+│   └── uptime-kuma/
+│       ├── compose.yml
+│       └── data/
+└── reverse-proxy/
+    └── traefik/
+        ├── acme/
+        ├── certs/
+        ├── compose.yml
+        ├── config/
+        │   └── dynamic.yml
+        └── traefik.yml
+```
+
+---
+
+# Network Architecture
+
+```text
+                         ┌────────────────────┐
+                         │ Tailscale Clients  │
+                         └─────────┬──────────┘
+                                   │
+                                   ▼
+                           ┌─────────────┐
+                           │   CoreDNS   │
+                           └──────┬──────┘
+                                  │
+                                  ▼
+                           ┌─────────────┐
+                           │   Traefik   │
+                           └──────┬──────┘
+                                  │
+        ┌─────────────────────────┼─────────────────────────┐
+        ▼                         ▼                         ▼
+
+ management_net            private_net               public_net
+   (Active)                (Reserved)                (Reserved)
+
+ Homepage                  Databases                 Future Apps
+ Portainer                 Internal APIs
+ Traefik
+ Uptime Kuma
+ File Browser
+```
+
+---
+
+# DNS & TLS
+
+Domains:
+
+```text
+homelab.msaquib.com
+*.homelab.msaquib.com
+```
+
+DNS:
+
+* CoreDNS provides internal DNS resolution.
+* Tailscale Split-DNS is configured.
+* Wildcard subdomains resolve correctly.
+
+TLS:
+
+* Let's Encrypt certificates.
+* Cloudflare DNS Challenge.
+* Automatic certificate renewal.
+* Wildcard certificate coverage.
+
+---
+
+# Running Services
+
+| Service           | URL                                   | Status |
+| ----------------- | ------------------------------------- | ------ |
+| Homepage          | https://homelab.msaquib.com           | ✅      |
+| Portainer         | https://portainer.homelab.msaquib.com | ✅      |
+| Cockpit           | https://cockpit.homelab.msaquib.com   | ✅      |
+| Traefik Dashboard | https://traefik.homelab.msaquib.com   | ✅      |
+| Uptime Kuma       | https://uptime.homelab.msaquib.com    | ✅      |
+| File Browser      | https://files.homelab.msaquib.com     | ✅      |
+
+Notes:
+
+* Cockpit is installed directly on the host.
+* All other services are containerized.
+* Traefik is the single ingress point.
+* Administrative services are protected by Tailscale.
+* Individual applications currently maintain their own authentication.
+
+---
+
+# Monitoring & Alerting
+
+Platform monitoring is handled through Uptime Kuma.
+
+Monitored Services:
+
+* Homepage
+* Portainer
+* Cockpit
+* Traefik Dashboard
+* Uptime Kuma
+* File Browser
+
+Notifications:
+
+* Twilio notifications configured.
+* Service outage alerts enabled.
+* Service recovery alerts enabled.
+
+---
+
+# Authentication Strategy
+
+Current State:
+
+```text
+Tailscale
+    ↓
+Application Login
+```
+
+Each application currently maintains its own authentication mechanism.
+
+Examples:
+
+* Portainer → Native authentication
+* Cockpit → Linux user authentication
+* Uptime Kuma → Native authentication
+* File Browser → Native authentication
+* Traefik Dashboard → Basic authentication
+
+Future Plan (Phase 2):
+
+* Deploy centralized SSO authentication (e.g., Authentik).
+* Implement unified Single Sign-On across all services.
+* Protect selected applications through Traefik Forward Authentication.
+* Retain local emergency access for critical infrastructure tools where appropriate.
+
+---
+
+# Completed
+
+Infrastructure:
+
+* Ubuntu Server
+* Docker
+* Docker Networks
+* Tailscale
+* CoreDNS
+* Split DNS
+* Traefik
+* HTTPS Routing
+* Let's Encrypt
+* Cloudflare DNS Challenge
+* Wildcard Certificates
+
+Management:
+
+* Homepage
+* Portainer
+* Cockpit
+* Uptime Kuma
+* File Browser
+
+Operations:
+
+* Git-based configuration management
+* Monitoring
+* Twilio notifications
+
+---
+
+# Phase 2 Priorities
+
+Priority Order:
+
+1. SSO Authentication (unified sign-in across all services)
+2. DevOps Automation (automatic deployment pipelines)
+
+---
+
+# Known Constraints
+
+* Single-node deployment.
+* 7.1 GB RAM.
+* 232 GB SSD.
+* No Kubernetes planned.
+* Docker Compose is the primary deployment model.
+* Deployments are currently manual.
+* Portainer is used for stack management.
+* Git repository is the source of truth.
+
+---
+
+# Important Operational Rules
+
+* Infrastructure first.
+* Private by default.
+* One ingress proxy (Traefik).
+* No direct public exposure of management tools.
+* No blind global restarts.
+* Only redeploy affected services.
+* Configuration belongs in Git.
+* Runtime data remains outside Git.
+
+---
+
+# Current Status Summary
+
+The homelab infrastructure and operations layer is fully operational. Phase 1 is complete.
+
+Current active stack:
+
+```text
+Homepage
+Portainer
+Cockpit
+Traefik
+CoreDNS
+Uptime Kuma
+File Browser
+```
+
+The next major milestones are implementing centralized SSO authentication and DevOps automation for automatic deployments.

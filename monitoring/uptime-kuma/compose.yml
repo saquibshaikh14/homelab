@@ -1,0 +1,28 @@
+services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:latest
+    container_name: uptime-kuma
+
+    restart: unless-stopped
+
+    volumes:
+      - ./data:/app/data
+
+    networks:
+      - management_net
+
+    labels:
+      - traefik.enable=true
+
+      # Router
+      - traefik.http.routers.uptime.rule=Host(`uptime.homelab.msaquib.com`)
+      - traefik.http.routers.uptime.entrypoints=websecure
+      - traefik.http.routers.uptime.tls=true
+      - traefik.http.routers.uptime.tls.certresolver=cloudflare
+
+      # Service
+      - traefik.http.services.uptime.loadbalancer.server.port=3001
+
+networks:
+  management_net:
+    external: true

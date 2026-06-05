@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Homelab</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+  <div class="container">
+
+    <header>
+      <h1 id="title"></h1>
+      <p class="subtitle" id="subtitle"></p>
+
+      <div class="stats">
+        <div class="stat">
+          <span class="value" id="service-count"></span>
+          <span class="label">Services</span>
+        </div>
+
+        <div class="stat">
+          <span class="value" id="server-count"></span>
+          <span class="label">Server</span>
+        </div>
+
+        <div class="stat">
+          <span class="value" id="private-percent"></span>
+          <span class="label">Private</span>
+        </div>
+      </div>
+    </header>
+
+    <main id="content"></main>
+
+    <footer>
+      Powered by Tailscale • CoreDNS • Traefik • Docker
+    </footer>
+
+  </div>
+
+  <script>
+    async function loadServices() {
+
+      const response = await fetch("./services.json");
+      const data = await response.json();
+
+      document.getElementById("title").textContent =
+        data.homelab.name;
+
+      document.getElementById("subtitle").textContent =
+        data.homelab.subtitle;
+
+      const totalServices =
+        data.sections.reduce(
+          (sum, section) =>
+            sum +
+            section.services.filter(
+              service => service.status === "active"
+            ).length,
+          0
+        );
+
+      document.getElementById("service-count").textContent =
+        totalServices;
+
+      document.getElementById("server-count").textContent =
+        data.stats.server;
+
+      document.getElementById("private-percent").textContent =
+        data.stats.private;
+
+      const content =
+        document.getElementById("content");
+
+      data.sections.forEach(section => {
+
+        const sectionElement =
+          document.createElement("section");
+
+        sectionElement.className = "section";
+
+        sectionElement.innerHTML = `
+          <h2>${section.title}</h2>
+          <div class="cards"></div>
+        `;
+
+        const cards =
+          sectionElement.querySelector(".cards");
+
+        section.services.forEach(service => {
+
+          const card =
+            document.createElement(
+              service.status === "active"
+                ? "a"
+                : "div"
+            );
+
+          card.classList.add("card");
+
+          if (service.status !== "active") {
+            card.classList.add("disabled");
+          }
+
+          if (service.url) {
+            card.href = service.url;
+            card.target = "_blank";
+            card.rel = "noopener noreferrer";
+          }
+
+          card.innerHTML = `
+            <div class="icon">
+              <img
+                src="${service.icon}"
+                alt="${service.name}">
+            </div>
+
+            <h3>${service.name}</h3>
+
+            <p>${service.description}</p>
+          `;
+
+          cards.appendChild(card);
+        });
+
+        content.appendChild(sectionElement);
+      });
+    }
+
+    loadServices();
+  </script>
+
+</body>
+
+</html>

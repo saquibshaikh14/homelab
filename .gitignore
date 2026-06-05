@@ -1,0 +1,23 @@
+# Secrets
+.env
+*.key
+*.pem
+*.crt
+
+
+# Traefik
+**/acme/*.json
+
+# Logs
+*.log
+logs/
+
+# Docker generated data
+data/
+storage/
+db/
+backup/
+
+# OS
+.DS_Store
+Thumbs.db

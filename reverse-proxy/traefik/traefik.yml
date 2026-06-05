@@ -1,0 +1,32 @@
+api:
+  dashboard: true
+  insecure: true
+
+entryPoints:
+  web:
+    address: ":80"
+
+  websecure:
+    address: ":443"
+
+providers:
+  docker:
+    exposedByDefault: false
+
+  file:
+    filename: /config/dynamic.yml
+    watch: true
+
+certificatesResolvers:
+  cloudflare:
+    acme:
+      email: saquibmd82@gmail.com
+
+      storage: /acme/acme.json
+
+      dnsChallenge:
+        provider: cloudflare
+
+        resolvers:
+          - "1.1.1.1:53"
+          - "8.8.8.8:53"

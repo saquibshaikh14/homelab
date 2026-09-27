@@ -21,7 +21,6 @@ services:
       - traefik.http.routers.portainer.entrypoints=websecure
       - traefik.http.routers.portainer.tls=true
       - traefik.http.routers.portainer.tls.certresolver=cloudflare
-      - traefik.http.routers.portainer.middlewares=github-auth@file
 
       - traefik.http.services.portainer.loadbalancer.server.port=9000
 

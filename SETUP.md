@@ -63,19 +63,15 @@ curl --version
 
 # Phase 2 - SSH Hardening
 
-Verify SSH access.
-
-Check:
+Verify SSH access:
 
 ```bash
-ls ~/.ssh
+ls -la ~/.ssh
 ```
 
-Ensure key-based authentication works.
+Ensure key-based authentication works before disabling password authentication.
 
-Optional:
-
-Disable password authentication.
+Disable password authentication:
 
 File:
 
@@ -83,20 +79,75 @@ File:
 /etc/ssh/sshd_config
 ```
 
-Restart:
+Set:
+
+```text
+PasswordAuthentication no
+PubkeyAuthentication yes
+```
+
+Restart and verify:
 
 ```bash
 sudo systemctl restart ssh
+sudo sshd -T | grep -i passwordauthentication
 ```
 
 ---
 
-# Phase 3 - Install Tailscale
+# Phase 3 - Power Management & Sleep Prevention
+
+Configure the system to prevent suspension or sleep (crucial when using laptop or headless hardware as an always-on server):
+
+1. Ignore lid switches in logind:
+
+File:
+
+```text
+/etc/systemd/logind.conf
+```
+
+Configuration:
+
+```ini
+[Login]
+HandleLidSwitch=ignore
+HandleLidSwitchExternalPower=ignore
+HandleLidSwitchDocked=ignore
+```
+
+Apply logind changes:
+
+```bash
+sudo systemctl restart systemd-logind
+```
+
+2. Mask all systemd sleep and suspend targets:
+
+```bash
+sudo systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target
+```
+
+Verify masked status:
+
+```bash
+systemctl status sleep.target suspend.target hibernate.target hybrid-sleep.target
+```
+
+---
+
+# Phase 4 - Install Tailscale
 
 Install:
 
 ```bash
 curl -fsSL https://tailscale.com/install.sh | sh
+```
+
+Enable auto-start on boot:
+
+```bash
+sudo systemctl enable --now tailscaled
 ```
 
 Authenticate:
@@ -117,27 +168,52 @@ Record Tailscale IP.
 Example:
 
 ```text
-100.125.241.3
+100.105.235.112
 ```
 
 ---
 
-# Phase 4 - Install Docker
+# Phase 5 - Install Docker
 
-Add Docker repository.
+Check and remove any conflicting/legacy packages:
 
-Install:
+```bash
+for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do sudo apt-get remove -y $pkg 2>/dev/null; done
+```
+
+Set up Docker's official apt repository:
+
+```bash
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+sudo apt update
+```
+
+Install Docker CE, CLI, and plugins:
 
 ```bash
 sudo apt install -y \
-docker-ce \
-docker-ce-cli \
-containerd.io \
-docker-buildx-plugin \
-docker-compose-plugin
+  docker-ce \
+  docker-ce-cli \
+  containerd.io \
+  docker-buildx-plugin \
+  docker-compose-plugin
 ```
 
-Verify:
+Configure non-root user access (optional):
+
+```bash
+sudo usermod -aG docker $USER
+```
+
+Verify installation:
 
 ```bash
 docker --version
@@ -150,15 +226,16 @@ Test:
 sudo docker run hello-world
 ```
 
-Enable:
+Enable auto-start on boot:
 
 ```bash
 sudo systemctl enable docker
+sudo systemctl enable containerd
 ```
 
 ---
 
-# Phase 5 - Create Homelab Structure
+# Phase 6 - Create Homelab Structure
 
 Create root folder:
 
@@ -211,7 +288,7 @@ find ~/homelab -maxdepth 3 -type d
 
 ---
 
-# Phase 6 - Create Docker Networks
+# Phase 7 - Create Docker Networks
 
 Create:
 
@@ -229,7 +306,7 @@ docker network ls
 
 ---
 
-# Phase 7 - Install Cockpit
+# Phase 8 - Install Cockpit
 
 Install:
 
@@ -257,23 +334,41 @@ https://SERVER_IP:9090
 
 ---
 
-# Phase 8 - Install Traefik
+# Phase 9 - Install Traefik
 
 Location:
 
 ```bash
-~/homelab/reverse-proxy/traefik
+cd ~/homelab/reverse-proxy/traefik
 ```
 
-Create:
+Structure & prerequisites:
 
 ```text
 traefik.yml          # Static configuration
 compose.yml          # Docker Compose definition
 config/
 └── dynamic.yml      # Dynamic routing, middlewares, Cockpit proxy
-acme/                # ACME certificate storage
-certs/               # Optional custom certificates
+acme/                # ACME certificate storage (requires chmod 600 acme.json)
+certs/               # Custom certificates storage
+.env                 # Cloudflare DNS API token (git-ignored)
+```
+
+Initialize storage and strict permissions:
+
+```bash
+mkdir -p acme certs
+touch acme/acme.json
+chmod 600 acme/acme.json
+```
+
+Configure Cloudflare DNS API token:
+
+Create `.env`:
+
+```bash
+echo "CF_DNS_API_TOKEN=your_cloudflare_api_token" > .env
+chmod 600 .env
 ```
 
 Deploy:
@@ -286,7 +381,16 @@ Verify:
 
 ```bash
 docker ps
+docker compose logs -f
 ```
+
+Verify Let's Encrypt certificate acquisition:
+
+```bash
+ls -la acme/acme.json
+```
+
+Global HTTP → HTTPS redirection is enabled on the `web` entryPoint (`:80` → `:443`). Any unencrypted request automatically redirects to secure HTTPS.
 
 Dashboard:
 
@@ -296,7 +400,7 @@ http://SERVER_IP:8080
 
 ---
 
-# Phase 9 - Install Portainer
+# Phase 10 - Install Portainer
 
 Location:
 
@@ -319,15 +423,15 @@ Verify:
 docker ps
 ```
 
-Access:
+Access (via Traefik HTTPS):
 
 ```text
-https://SERVER_IP:9443
+https://portainer.homelab.msaquib.com
 ```
 
 ---
 
-# Phase 10 - Install Homepage
+# Phase 11 - Install Homepage
 
 Location:
 
@@ -362,7 +466,7 @@ docker ps
 
 ---
 
-# Phase 11 - Connect Services to Traefik
+# Phase 12 - Connect Services to Traefik
 
 Homepage:
 
@@ -400,7 +504,7 @@ Verify routes appear in Traefik dashboard.
 
 ---
 
-# Phase 12 - Install CoreDNS
+# Phase 13 - Install CoreDNS
 
 Location:
 
@@ -433,18 +537,18 @@ docker compose up -d
 Verify:
 
 ```bash
-dig @100.125.241.3 homelab.msaquib.com
+dig @100.105.235.112 homelab.msaquib.com
 ```
 
 Expected:
 
 ```text
-100.125.241.3
+100.105.235.112
 ```
 
 ---
 
-# Phase 13 - Configure Tailscale Split DNS
+# Phase 14 - Configure Tailscale Split DNS
 
 Goal:
 
@@ -465,7 +569,7 @@ Tailscale Admin
 Nameserver:
 
 ```text
-100.125.241.3
+100.105.235.112
 ```
 
 Domain:
@@ -474,11 +578,17 @@ Domain:
 homelab.msaquib.com
 ```
 
-Verify from another Tailscale device.
+Verify from another Tailscale device:
+
+```bash
+dig @100.100.100.100 homelab.msaquib.com
+```
+
+> **Important Rebuild Note**: Whenever the homelab server is re-installed, rebuilt, or changes Tailscale IPs, you **must update the Split DNS Nameserver IP** in the Tailscale Admin Console (`Tailscale Admin → DNS → Split DNS → homelab.msaquib.com`). Otherwise, Tailscale MagicDNS will attempt to query the decommissioned IP and client browsers will encounter DNS timeouts (`DNS_PROBE_FINISHED_NXDOMAIN`).
 
 ---
 
-# Phase 14 - Install Uptime Kuma
+# Phase 15 - Install Uptime Kuma
 
 Location:
 
@@ -510,12 +620,14 @@ Add homepage card.
 Deploy:
 
 ```bash
+cd ~/homelab/monitoring/uptime-kuma
+mkdir -p data
 docker compose up -d
 ```
 
 ---
 
-# Phase 15 - Install File Browser
+# Phase 16 - Install File Browser
 
 Location:
 
@@ -542,12 +654,14 @@ Add homepage card.
 Deploy:
 
 ```bash
+cd ~/homelab/management/filebrowser
+mkdir -p data
 docker compose up -d
 ```
 
 ---
 
-# Phase 16 - Homepage Integration
+# Phase 17 - Homepage Integration
 
 Homepage becomes central dashboard.
 

@@ -1,13 +1,5 @@
 http:
   routers:
-    http-catchall:
-      rule: "HostRegexp(`^.+$`)"
-      entryPoints:
-        - web
-      middlewares:
-        - redirect-to-https
-      service: noop@internal
-
     traefik:
       rule: "Host(`traefik.homelab.msaquib.com`)"
       entryPoints:
@@ -34,12 +26,6 @@ http:
   serversTransports:
     cockpitTransport:
       insecureSkipVerify: true
-
-  middlewares:
-    redirect-to-https:
-      redirectScheme:
-        scheme: https
-        permanent: true
 
 # tls:
 #   certificates:

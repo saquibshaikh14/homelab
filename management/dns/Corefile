@@ -1,7 +1,7 @@
 homelab.msaquib.com {
     template IN A {
         match ^([^.]+\.)?homelab\.msaquib\.com\.$
-        answer "{{ .Name }} 60 IN A 100.125.241.3"
+        answer "{{ .Name }} 60 IN A 100.105.235.112"
     }
 
     log

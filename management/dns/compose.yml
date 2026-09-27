@@ -3,7 +3,7 @@ services:
     image: coredns/coredns:latest
     container_name: coredns
 
-    # restart: unless-stopped
+    restart: unless-stopped
 
     command: -conf /Corefile
 
@@ -11,8 +11,8 @@ services:
       - management_net
 
     ports:
-      - "100.125.241.3:53:53/udp"
-      - "100.125.241.3:53:53/tcp"
+      - "100.105.235.112:53:53/udp"
+      - "100.105.235.112:53:53/tcp"
 
     volumes:
       - ./Corefile:/Corefile:ro

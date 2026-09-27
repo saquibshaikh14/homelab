@@ -53,6 +53,29 @@ Phase 2: Identity & Automation
 
 ---
 
+# Host & System Foundation
+
+Current Host Settings:
+
+```text
+SSH
+ ├── SSH key authentication       ✅
+ └── Password authentication      ❌ (Disabled)
+
+Tailscale
+ ├── Auto-start on boot           ✅
+ ├── Restart on failure           ✅
+ └── Connected                    ✅
+
+Power & Sleep
+ ├── Lid close action             → ignore (/etc/systemd/logind.conf)
+ ├── Suspend target               → masked (disabled)
+ ├── Hibernate target             → masked (disabled)
+ └── Hybrid sleep target          → masked (disabled)
+```
+
+---
+
 # Folder Structure
 
 ```text
@@ -223,6 +246,8 @@ Future Plan (Phase 2):
 Infrastructure:
 
 * Ubuntu Server
+* Power Management & Sleep Target Masking (Always-on server)
+* SSH Hardening (Key authentication enforced, password auth disabled)
 * Docker
 * Docker Networks
 * Tailscale

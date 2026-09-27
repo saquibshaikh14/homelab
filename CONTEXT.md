@@ -45,10 +45,10 @@ Phase 1: Infrastructure & Operations
 ✅ Complete
 ```
 
-Phase 2: Identity & Automation
+Phase 2: Identity & Single Sign-On (GitHub OAuth + oauth2-proxy)
 
 ```text
-⏳ Planned
+✅ Deployed (Active)
 ```
 
 ---
@@ -214,30 +214,27 @@ Notifications:
 
 # Authentication Strategy
 
-Current State:
+Current Architecture:
 
 ```text
-Tailscale
-    ↓
-Application Login
+User / Tailscale
+       ↓
+    Traefik
+       ↓ (ForwardAuth check)
+ oauth2-proxy (GitHub OAuth)
+       ↓ (Authenticated session)
+Internal Service
 ```
 
-Each application currently maintains its own authentication mechanism.
-
-Examples:
-
-* Portainer → Native authentication
-* Cockpit → Linux user authentication
-* Uptime Kuma → Native authentication
-* File Browser → Native authentication
-* Traefik Dashboard → Basic authentication
-
-Future Plan (Phase 2):
-
-* Deploy centralized SSO authentication (e.g., Authentik).
-* Implement unified Single Sign-On across all services.
-* Protect selected applications through Traefik Forward Authentication.
-* Retain local emergency access for critical infrastructure tools where appropriate.
+SSO Integration:
+* **Single Sign-On Gateway**: `oauth2-proxy` handles GitHub OAuth authentication for all administrative services on `management_net`.
+* **Cookie Domain**: `.homelab.msaquib.com` (SSO session shared across all subdomains).
+* **Traefik Middleware**: `github-auth` enforces perimeter authentication and passes identity headers (`X-Auth-Request-User`, `X-Auth-Request-Email`).
+* **Service Integrations**:
+  * **Homepage**: Shows authenticated GitHub user profile pill and global Sign Out button.
+  * **File Browser**: Reverse proxy auto-login enabled (`auth.method: proxy`, `auth.header: X-Auth-Request-User`) directly logging into admin account.
+  * **Uptime Kuma**: Internal authentication disabled (`disableAuth: true`) so perimeter SSO provides automatic direct access to the dashboard.
+  * **Portainer / Cockpit / Traefik Dashboard**: Ingress protected by GitHub SSO at the gateway.
 
 ---
 

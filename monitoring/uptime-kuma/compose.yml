@@ -19,6 +19,7 @@ services:
       - traefik.http.routers.uptime.entrypoints=websecure
       - traefik.http.routers.uptime.tls=true
       - traefik.http.routers.uptime.tls.certresolver=cloudflare
+      - traefik.http.routers.uptime.middlewares=github-auth@file
 
       # Service
       - traefik.http.services.uptime.loadbalancer.server.port=3001

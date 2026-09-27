@@ -625,6 +625,13 @@ mkdir -p data
 docker compose up -d
 ```
 
+SSO Integration:
+* Uptime Kuma is protected at the ingress by Traefik + GitHub SSO (`github-auth` middleware).
+* Because Uptime Kuma does not parse HTTP proxy headers, disable internal auth to achieve single sign-on:
+  * In Uptime Kuma: **Settings** → **Security** → click **Disable Auth** (enter admin password to confirm).
+  * Or configure directly via SQLite database (`UPDATE setting SET value = 'true' WHERE key = 'disableAuth'`).
+  * Once disabled, authenticated GitHub users automatically bypass the login screen directly to the admin dashboard.
+
 ---
 
 # Phase 16 - Install File Browser

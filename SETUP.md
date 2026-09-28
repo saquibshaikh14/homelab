@@ -332,6 +332,30 @@ Access:
 https://SERVER_IP:9090
 ```
 
+Configure Reverse Proxy Support:
+
+Create `/etc/cockpit/cockpit.conf` to allow Traefik reverse proxy origins and WebSocket connections:
+
+```ini
+[WebService]
+Origins = https://cockpit.homelab.msaquib.com wss://cockpit.homelab.msaquib.com
+ProtocolHeader = X-Forwarded-Proto
+```
+
+Apply Cockpit configuration:
+
+```bash
+sudo systemctl restart cockpit.socket cockpit.service
+```
+
+> **Reverse Proxy & SSO Architecture Note**:
+> Cockpit is proxied via Traefik at `https://cockpit.homelab.msaquib.com`.
+> Because Cockpit internally issues HTTP 401 challenges for Linux PAM authentication, Traefik uses a dual-router configuration:
+> 1. `cockpit`: Gateway entry route (`Host`) protected by `github-auth` (presents the GitHub OAuth sign-in screen if not logged in).
+> 2. `cockpit-internal`: Internal route (`PathPrefix('/cockpit')` and WebSockets) with `auth-verify` (validates GitHub session without intercepting Cockpit's internal PAM challenges).
+>
+> Users authenticate first with GitHub OAuth, then log in to the system with their local Linux user credentials (`<username>` / `<password>`).
+
 ---
 
 # Phase 9 - Install Traefik

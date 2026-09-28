@@ -10,8 +10,20 @@ http:
         - github-auth
       service: api@internal
 
+    cockpit-internal:
+      rule: "Host(`cockpit.homelab.msaquib.com`) && (PathPrefix(`/cockpit`) || HeadersRegexp(`Upgrade`, `websocket`))"
+      priority: 50
+      entryPoints:
+        - websecure
+      tls:
+        certResolver: cloudflare
+      middlewares:
+        - auth-verify
+      service: cockpit
+
     cockpit:
       rule: "Host(`cockpit.homelab.msaquib.com`)"
+      priority: 40
       entryPoints:
         - websecure
       tls:
@@ -44,6 +56,13 @@ http:
       forwardAuth:
         address: "http://oauth2-proxy:4180/oauth2/auth"
         trustForwardHeader: true
+        authRequestHeaders:
+          - "Cookie"
+          - "X-Forwarded-Host"
+          - "X-Forwarded-Proto"
+          - "X-Forwarded-Uri"
+          - "X-Forwarded-For"
+          - "X-Forwarded-Method"
         authResponseHeaders:
           - "X-Auth-Request-User"
           - "X-Auth-Request-Email"

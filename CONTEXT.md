@@ -234,7 +234,8 @@ SSO Integration:
   * **Homepage**: Shows authenticated GitHub user profile pill and global Sign Out button.
   * **File Browser**: Reverse proxy auto-login enabled (`auth.method: proxy`, `auth.header: X-Auth-Request-User`) directly logging into admin account.
   * **Uptime Kuma**: Internal authentication disabled (`disableAuth: true`) so perimeter SSO provides automatic direct access to the dashboard.
-  * **Portainer / Cockpit / Traefik Dashboard**: Ingress protected by GitHub SSO at the gateway.
+  * **Cockpit**: Protected at perimeter by GitHub SSO via Traefik dual-routing (`cockpit` gateway route with `github-auth` and `cockpit-internal` for PAM/WebSockets with `auth-verify`), allowing native Linux user PAM authentication.
+  * **Portainer / Traefik Dashboard**: Ingress protected by GitHub SSO at the gateway.
 
 ---
 
